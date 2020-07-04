@@ -1,0 +1,95 @@
+import os
+import sqlite3
+import time
+con = sqlite3.connect("Reservation.db")
+crsr = con.cursor()
+crsr.execute("CREATE TABLE IF NOT EXISTS Users (Username VARCHAR(255) PRIMARY KEY, Pin INTEGER, Firstname VARCHAR(255), Lastname VARCHAR(255), Email VARCHAR(255), Age INTEGER, Gender VARCHAR(255));")
+crsr.execute("CREATE TABLE IF NOT EXISTS Tickets (Ticket_number INTEGER, Train_name VARCHAR(255), Firstname VARCHAR(255), Lastname VARCHAR(255), Age INTEGER, Gender VARCHAR(255), From VARCHAR(255), To VARCHAR(255), Seat_number INTEGER, Username VARCHAR(255));")
+crsr.execute("CREATE TABLE IF NOT EXISTS Trains (Train_number INTEGER PRIMARY KEY, Train_name VARCHAR(255), Stop_1 VARCHAR(255), Stop_2 VARCHAR(255), Stop_3 VARCHAR(255), Stop_4 VARCHAR(255), Stop_5 VARCHAR(255), Seats VARCHAR(255));") 
+con.commit()
+ti_num=0
+public def login():
+        time.sleep(1)
+        os.system('cls')
+        print("**********  Login page  *********\n\n")
+        u_name,pin=input("\nUsername : "),int(input("\nPin : "))
+        crsr.execute("SELECT Username , Pin FROM Users;")
+        a=crsr.fetchall()
+        for row in a:
+           if(row[0] == u_name and row[1] == pin):
+                 print("\nLogged in Successfully")
+                 return True
+        print("\nUsername or PIN is incorrect\n")        
+        l=int(input("\n1.Sign up\n2.Try again\n\n"))
+        if l==1:
+            signin()
+        elif l==2:
+            login()
+
+
+def signin():
+         time.sleep(1)
+         os.system('cls')
+         print("**********  Signup page  *********\n\n")
+         f=True
+         while True :
+            u_name = input("\nUsername : ")
+            crsr.execute("SELECT Username FROM Users;")
+            a=crsr.fetchall()
+            for i in a:
+               if u_name in i:
+                   print("Username already taken\n")
+                   f=False
+                   l=int(input("1. Login \n2. Try Again\n\n"))
+                   if l==1:
+                     if login():
+                        return True
+                   break
+            if f :
+                 break        
+         pin,f_name,l_name,mailid,age,gender = int(input("\nPIN : ")),input("\nFirstname : "),input("\nLastname : "),input("\nEmail Id : "),int(input("\nAge : ")),input("\nGender : ")
+         crsr.execute("INSERT INTO Users VALUES (?,?,?,?,?,?,?)",(u_name,pin,f_name,l_name,mailid,age,gender))
+         con.commit()
+
+
+def book():
+         time.sleep(1)
+         os.system('cls')
+         print("**********  Reservation page  *********\n\n")
+         f,t=input("\nFrom : "),input("\nTo : ")
+         crsr.execute("SELECT Train_number, Train_name, Seats from Trains WHERE ? IN (Stop_1,Stop_2,Stop_3,Stop_4,Stop_5) AND ? IN (Stop_1,Stop_2,Stop_3,Stop_4,Stop_5) AND Seats!='' ",(f,t))
+         a=crsr.fetchall()
+         if not a:
+            print("\nCurrently no train is available in that route")
+            book()
+         while True:
+               for rows in a:
+                   print("Train No.: "+row[0]+" Train Name : "+row[1]+"Seats available : "+(row[2]//2)+"\n")
+               tn=int(input("\nEnter the Train No. to select : "))
+               crsr.execute("SELECT Train_number, Train_name, Seats FROM Trains WHERE ? IN Train_number AND Seats!='         ' ",(tn,))
+               a=crsr.fetchall()
+               if a:
+                  n=int(input("\nEnter the number of Passangers : "))
+                  if (n>len(a[2])-9):
+                     print("\nSeats are unavailable")
+                     time.sleep(2)
+                     os.system('cls')
+                     continue
+                  elif (n>0):
+                       ti_num+=1                      
+                       for i in range(1,n+1):
+                           if (i%5==0):
+                              ti_num+=1
+                           f_name,l_name,age,gender,s_num=input("\nFirst Name : "),input("\nLast Name : "),int(input("\nAge : ")),input("\nGender : "),int(input("\nSeat Num : ")) 
+                           while True:
+                                 if str(s_num) not in a[2]:
+                                    print("\nSeat number is not available")
+                                    s_num=int(input("\nEnter Seat number : "))
+                                 else:
+                                     break
+                           s_new=a[2].replace(str(s_num),'') 
+                           crsr.execute("INSERT INTO Tickets VALUES (?,?,?,?,?,?,?,?,?,?)",(ti_num,a[1],f_name,l_name,age,gender[0],f,t,s_num,u_name))
+                           con.commit()
+                  break
+
+
